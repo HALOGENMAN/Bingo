@@ -66,6 +66,10 @@
   background-color:brown;
 }
 
+#cooked{
+  background-color:rgb(224, 221, 15);
+}
+
 .nodeText{
   font-size:x-large;
   font-weight: 700;

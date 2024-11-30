@@ -3,36 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
   new bootstrap.Popover(popoverTrigger);
 });
 
-const node = Array.from({ length: 25 }, (_, i) => ({ number:-1, clas:"", bolcked:false}));
-
-const generateRandomArray = () => {
-  const array = Array.from({ length: 25 }, (_, i) => i + 1);
-  for (let i = array.length - 1; i > 0; i--) {
-      const randomIndex = Math.floor(Math.random() * (i + 1));
-      [array[i], array[randomIndex]] = [array[randomIndex], array[i]]; // Swap
-  }
-  return array;
-}
-
-const getElement = (clas) => {
-  return document.querySelector(clas)
-}
-
-const NodeClicked = (number) => {
-  let nd = node.find(e=>{
-    return e.number === number
-  })
-  if(nd.bolcked) return;
-  let elem = getElement(nd.clas);
-  elem.id = 'blocked'
-  nd.bolcked = true
-
-}
-
-const mainAlgorithm = () => {
-
-}
-
+// ============================= music shit =========================================
 
 let musicPlayVolume = 0;
 let totalAudioFiles = 0;
@@ -61,6 +32,13 @@ const changeMusicNumber = () =>{
   getElement('#musicNumber').innerHTML = `<b>${currentAudioFile+1}</b>`
   getMusicEle().src = audioFileNames[currentAudioFile]; 
   getMusicEle().play()
+  let speaker = getElement('#music');
+  if(musicPlayVolume === 0){
+    speaker.className = 'fa fa-volume-off';
+    getMusicEle().volume = 0.2;
+    getMusicEle().play()
+    musicPlayVolume = 1;
+  }
 }
 
 const toggleMusic = () =>{
@@ -69,7 +47,6 @@ const toggleMusic = () =>{
     speaker.className = 'fa fa-volume-off';
     getMusicEle().volume = 0.2;
     getMusicEle().play()
-
     musicPlayVolume = 1;
   }else if(musicPlayVolume === 1){
     speaker.className = 'fa-solid fa-volume-low';
@@ -85,6 +62,50 @@ const toggleMusic = () =>{
     musicPlayVolume = 0;
   }
 }
+//------------------------------------------end music shit----------------------------------------
+
+
+
+const node = Array.from({ length: 25 }, (_, i) => ({ number:-1, clas:"", bolcked:false}));
+
+const generateRandomArray = () => {
+  const array = Array.from({ length: 25 }, (_, i) => i + 1);
+  for (let i = array.length - 1; i > 0; i--) {
+      const randomIndex = Math.floor(Math.random() * (i + 1));
+      [array[i], array[randomIndex]] = [array[randomIndex], array[i]]; // Swap
+  }
+  return array;
+}
+
+const getElement = (clas) => {
+  return document.querySelector(clas)
+}
+
+let isUserConnected = true;
+let areYouInTheGame = true;
+let isItYourTurn = true;
+
+const resetTheGame = () =>{
+  isUserConnected = false;
+  areYouInTheGame = false;
+  isItYourTurn = false;
+  setConnectionStatus()
+  setPlayingStatus()
+}
+
+const NodeClicked = (number) => {
+  if(!isItYourTurn && isUserConnected) return
+
+  let nd = node.find(e=>{
+    return e.number === number
+  })
+  if(nd.bolcked) return;
+  let elem = getElement(nd.clas);
+  elem.id = `blocked`
+  nd.bolcked = true
+  mainAlgorithm()
+}
+
 
 const generateMap = (arr) =>{
   arr.forEach((e,idx)=>{
@@ -92,21 +113,32 @@ const generateMap = (arr) =>{
     
     node[idx].number = e;
     node[idx].clas = clas;
+    node[idx].bolcked = false;
 
     let elem = getElement(clas);
-    
+    elem.id = ''
     elem.innerHTML = `<span class='nodeText'>${e}</span>`
-
-    elem.addEventListener('click',(event)=>{
+    elem.onclick = (event) =>{
       event.preventDefault()
       NodeClicked(e)
-    })
+    }
+    // elem.addEventListener('click',(event)=>{
+      
+    // })
   })
 }
 
-isUserConnected = false;
-areYouInTheGame = false;
-isItYourTurn = false;
+const startTheGame = () =>{
+  if(!isUserConnected){
+    return alert('First you need to connect with the another player, then you can start the game..')
+  }
+  if(areYouInTheGame){
+    return alert('First finishi this game then start new game..')
+  }
+
+  // send playing request
+
+}
 
 const setConnectionStatus = (connId) =>{
   let connStatus = getElement('#connectionStatus');
@@ -134,11 +166,103 @@ const setPlayingStatus = () =>{
     }
   }
 }
-
-window.onload = function() {
+const resetBoard = () =>{
   let arr = generateRandomArray();
   generateMap(arr)
+}
+const resetBoardAction = () =>{
+  if(areYouInTheGame){
+    if(confirm('You are currently in the game if you Reset the board you will "lose" and get "disconnected"....')){
+      resetTheGame()
+      resetBoard()
+    }
+  }else{
+    resetBoard()
+  }
+} 
+const calculateNodeIndex = (r,c) => {
+  return (r*5)+c;
+}
+const mainAlgorithm = () => {
+  if(!areYouInTheGame) return;
+  let count=0;
+  // top left diagonal
+  let check = true;
+  for(let i=0;i<5;i++){
+    if(!node[calculateNodeIndex(i,i)].bolcked){
+      check=false;
+      break;
+    }
+  }
+  if(check){
+    count++;
+    for(let i=0;i<5;i++){
+      getElement(node[calculateNodeIndex(i,i)].clas).id='cooked'
+    }
+  } 
+  // top right diagonal
+  check = true;
+  for(let i=0;i<5;i++){
+    if(!node[calculateNodeIndex(i,4-i)].bolcked){
+      check=false;
+      break;
+    }
+  }
+  if(check){
+    count++;
+    for(let i=0;i<5;i++){
+      getElement(node[calculateNodeIndex(i,4-i)].clas).id='cooked'
+    }
+  } 
 
+  // calculate rows
+  for(let r=0;r<5;r++){
+    check = true;
+    for(let c=0;c<5;c++){
+      if(!node[calculateNodeIndex(r,c)].bolcked){
+        check=false;
+        break;
+      }
+    }
+    if(check){
+      count++;
+      for(let c=0;c<5;c++){
+        getElement(node[calculateNodeIndex(r,c)].clas).id='cooked'
+      }
+    } 
+    if(count>=5){
+      console.log("you won the game")
+      areYouInTheGame = false
+      return;
+    }
+  }
+
+  // calculate columns
+  for(let c=0;c<5;c++){
+    check = true;
+    for(let r=0;r<5;r++){
+      if(!node[calculateNodeIndex(r,c)].bolcked){
+        check=false;
+        break;
+      }
+    }
+    if(check){
+      count++;
+      for(let r=0;r<5;r++){
+        getElement(node[calculateNodeIndex(r,c)].clas).id='cooked'
+      }
+    } 
+    if(count>=5){
+      console.log("you won the game")
+      areYouInTheGame = false
+      return;
+    }
+  }
+  
+}
+
+window.onload = function() {
+  resetBoard()
   getAudioData()
   getElement('#musicNumber').innerHTML = `<b>1</b>`
 
