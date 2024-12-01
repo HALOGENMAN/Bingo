@@ -3,6 +3,20 @@ document.addEventListener("DOMContentLoaded", function () {
   new bootstrap.Popover(popoverTrigger);
 });
 
+// not in use
+function compressString(input) {
+  const compressed = new TextEncoder().encode(input);
+  const base64String = btoa(String.fromCharCode(...compressed));
+  return base64String;
+}
+
+// notin use
+function decompressString(input) {
+  const decoded = atob(input);
+  const decompressed = new TextDecoder().decode(Uint8Array.from(decoded, c => c.charCodeAt(0)));
+  return decompressed;
+}
+
 
 const getElement = (clas) => {
   return document.querySelector(clas)
@@ -129,11 +143,10 @@ const generateQr = (data) =>{
     correctLevel : QRCode.CorrectLevel.H
   });
   // qrcode.clear(); // clear the code./
-  let encodedData = compressString(data)
-  setEncodedOffer(encodedData)
+  // let encodedData = compressString(data)
+  setEncodedOffer(data)
   showOverlay()
-  toastAction("code is generated")
-  qrcode.makeCode(encodedData);
+  qrcode.makeCode(data);
   offerGeneratedValue = true
 }
 
@@ -141,12 +154,7 @@ const setEncodedOffer = (offer) =>{
   getElement('#encodedOffer').value = offer
 }
 const showOverlay = (delay=10) =>{
-  let qrcode = getElement('#qrcode')
-  qrcode.style.display = 'block'
-  let reader = getElement('#reader')
-  reader.style.display = 'none'
-
-  getElement('#offerHeading').innerHTML = 'Please tell other player to scan the offer.';
+  shoeOfferQr()
   let overlay = getElement('#overlay')
   overlay.style.display = 'flex';
   setTimeout(() => {
@@ -160,18 +168,6 @@ const closeOverlay = () =>{
   setTimeout(() => {
     overlay.style.opacity = 1;
   }, 10); // Small delay for the animation to trigger
-}
-
-function compressString(input) {
-  const compressed = new TextEncoder().encode(input);
-  const base64String = btoa(String.fromCharCode(...compressed));
-  return base64String;
-}
-
-function decompressString(input) {
-  const decoded = atob(input);
-  const decompressed = new TextDecoder().decode(Uint8Array.from(decoded, c => c.charCodeAt(0)));
-  return decompressed;
 }
 
 const copyOffer = () => {
@@ -191,15 +187,32 @@ const copyOffer = () => {
 }
 
 const scanAnswer = () =>{
-
+  getElement('#offerHeading').innerHTML = 'Please Scan the Answer..';
   let qrcode = getElement('#qrcode')
   qrcode.style.display = 'none'
   let reader = getElement('#reader')
   reader.style.display = 'block'
-
-
+  getElement('#offerId').style.display = 'none'
+  getElement('#scanAnswerButton').style.display = 'none'
+  getElement('#shoeOfferQrButton').style.display = ''
   
 }
+
+const shoeOfferQr = () =>{
+  getElement('#offerHeading').innerHTML = 'Please tell other player to scan the offer.';
+  let qrcode = getElement('#qrcode')
+  qrcode.style.display = 'block'
+  let reader = getElement('#reader')
+  reader.style.display = 'none'
+
+  getElement('#offerId').style.display = 'block'
+  getElement('#scanAnswerButton').style.display = ''
+  getElement('#shoeOfferQrButton').style.display = 'none'
+
+}
+
+
+scanAnswerButton
 
 function domReady(fn) {
   if (
