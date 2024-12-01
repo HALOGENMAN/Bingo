@@ -136,6 +136,10 @@ function generateOffer(){
   peerConnection.createOffer().then(o => peerConnection.setLocalDescription(o) )
 }
 
+const connectWithRemote = (answer) =>{
+  peerConnection.setRemoteDescription (answer).then(a=>console.log("done"))
+}
+
 
 
 const generateQr = (data) =>{
@@ -156,8 +160,11 @@ const generateQr = (data) =>{
   offerGeneratedValue = true
 }
 
+
+
 const setEncodedOffer = (offer) =>{
-  getElement('#encodedOffer').value = offer
+  console.log()
+  getElement('#encodedAnswer').value = offer
 }
 const showOverlay = (overlayId,delay=10) =>{
   if(overlayId=='overlay'){
@@ -180,26 +187,85 @@ const closeOverlay = (overlayId) =>{
   }, 10); // Small delay for the animation to trigger
 }
 
-const copyOffer = () => {
+const copyOffer = (type='Offer') => {
   // Select the input field
-  const textToCopy = getElement('#encodedOffer')
+
+  const textToCopy = type==='Offer'?getElement('#encodedAnswer'):getElement('#encodedOfferAnswer')
   textToCopy.select();
   textToCopy.setSelectionRange(0, 99999); // For mobile devices
 
   // Copy the text inside the input
   navigator.clipboard.writeText(textToCopy.value)
     .then(() => {
-      toastAction('Offer copied...')
+      toastAction(`${type} copied...`)
     })
     .catch(err => {
       console.error("Failed to copy text: ", err);
     });
 }
 
+const connectUsingOfferToGenerateAnswer  = async (offer) =>{
+
+  const remoteConnection = new RTCPeerConnection(configuration)
+  remoteConnection.onicecandidate = e =>  {
+  console.log(" NEW ice candidnat!! on localconnection reprinting SDP " )
+  console.log(JSON.stringify(remoteConnection.localDescription) )
+  }
+
+  
+  remoteConnection.ondatachannel= e => {
+        const receiveChannel = e.channel;
+        receiveChannel.onmessage =e =>  console.log("messsage received!!!"  + e.data )
+        receiveChannel.onopen = e => console.log("open!!!!");
+        receiveChannel.onclose =e => console.log("closed!!!!!!");
+        remoteConnection.channel = receiveChannel;
+
+  }
+
+
+  remoteConnection.setRemoteDescription(offer).then(a=>console.log("done"))
+
+  //create answer
+  await remoteConnection.createAnswer().then(a => remoteConnection.setLocalDescription(a)).then(a=>{
+    showAnswerQr(JSON.stringify(remoteConnection.localDescription))
+  }
+  )
+}
+
+const generateQrForAnswer = (data) =>{
+  document.getElementById("qrcodeAnswer").innerHTML = ""
+  var qrcode = new QRCode(document.getElementById("qrcodeAnswer"), {
+    text: "",
+    width: 350,
+    height: 350,
+    colorDark : "#000000",
+    colorLight : "#ffffff",
+    correctLevel : QRCode.CorrectLevel.L
+  });
+  setEncodedOffer(data)
+  qrcode.makeCode(data);
+}
+
+const showAnswerQr = (answerQr) =>{
+  console.log("showing answer QQQRRRR")
+  getElement('#offerHeading').innerHTML = 'Please Tell Other Player to scan the Answer..';
+  let qrcode = getElement('#qrcodeAnswer')
+  qrcode.style.display = 'block'
+  let reader = getElement('#readerAnswer')
+  reader.style.display = 'none'
+  getElement('#answerIdAnswer').style.display = 'block'
+  getElement('#offerIdAnswer').style.display = 'none'
+  getElement('#encodedOfferAnswer').value = answerQr;
+  generateQrForAnswer(answerQr)
+}
+
 const getScannedData = (readerId,type) =>{
   function onScanSuccess(decodedText, decodedResult) {
     // Handle on success condition with the decoded text or result.
-    alert(`Scan result: ${decodedText}`, decodedResult);
+    if(type=='offer'){
+      
+      connectUsingOfferToGenerateAnswer(JSON.parse(decodedText))
+    } 
     // ...
     html5QrcodeScanner.clear();
     // ^ this will stop the scanner (video feed) and clear the scan area.
@@ -226,13 +292,29 @@ const scanAnswer = () =>{
   getScannedData('readerAnswerr','answer')
 }
 
+
+
 const gerAnswer = () =>{
   let answerId = getElement('#ancerId');
   console.log(answerId.value)
   let answer = answerId.value;
+  if(answer=='') return;
   answerId.value = "";
+  connectWithRemote(JSON.parse(answer))
 
 }
+
+const gerOffer = () =>{
+  let offer = getElement('#encodedAnswerxx');
+  if(offer.value == "") return; 
+  let ofr = JSON.parse(offer.value);
+  offer.value = "";
+
+  connectUsingOfferToGenerateAnswer(ofr)
+  
+  
+}
+
 
 function scanOffer(){
   showOverlay('answer')
@@ -258,12 +340,9 @@ const OfferScanar = () =>{
   qrcode.style.display = 'none'
   let reader = getElement('#readerAnswer')
   reader.style.display = 'block'
+  getElement('#answerIdAnswer').style.display = 'none'
+  getElement('#offerIdAnswer').style.display = 'block'
   getScannedData('readerOfferr','offer')
-
-  // getElement('#offerId').style.display = 'block'
-  // getElement('#scanAnswerButton').style.display = ''
-  // getElement('#shoeOfferQrButton').style.display = 'none'
-  // getElement('#answerIdBlock').style.display = 'none'
 
 }
 
