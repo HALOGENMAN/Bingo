@@ -3,6 +3,31 @@ document.addEventListener("DOMContentLoaded", function () {
   new bootstrap.Popover(popoverTrigger);
 });
 
+
+const getElement = (clas) => {
+  return document.querySelector(clas)
+}
+
+const toastAction = (message) => {
+  const toastLiveExample = document.getElementById('liveToast')
+  const toastMessage = getElement('#toastMessage');
+  const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastLiveExample)
+  toastMessage.innerHTML = message
+  toastBootstrap.show()
+}
+
+
+
+// window.onbeforeunload =  (event) => {
+//   if(isUserConnected){
+//     event.preventDefault(); 
+//     event.returnValue = "You will be disconnected if you refresh this page..";
+//     return "You will be disconnected if you refresh this page.."; 
+//   }
+//   return false
+// }
+
+
 // ============================= music shit =========================================
 
 let musicPlayVolume = 0;
@@ -64,8 +89,154 @@ const toggleMusic = () =>{
 }
 //------------------------------------------end music shit----------------------------------------
 
+//========================================================= connection shit =================================================
+
+const configuration = {
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" }
+  ]
+};
+
+let offerGeneratedValue = false;
+
+const peerConnection = new RTCPeerConnection(configuration);
+let sendChannel = {}
+function generateOffer(){
+  if(offerGeneratedValue){
+    showOverlay()
+    return
+  }
+  peerConnection.onicecandidate = e =>  {
+    let qrData = JSON.stringify(peerConnection.localDescription)
+    generateQr(qrData)
+  }
+  sendChannel = peerConnection.createDataChannel("sendChannel");
+  sendChannel.onmessage =e =>  console.log("messsage received!!!"  + e.data )
+  sendChannel.onopen = e => console.log("open!!!!");
+  sendChannel.onclose =e => console.log("closed!!!!!!");
+  peerConnection.createOffer().then(o => peerConnection.setLocalDescription(o) )
+}
+
+const generateQr = (data) =>{
+  document.getElementById("qrcode").innerHTML = ""
+  var qrcode = new QRCode(document.getElementById("qrcode"), {
+    text: "",
+    width: 350,
+    height: 350,
+    colorDark : "#000000",
+    colorLight : "#ffffff",
+    correctLevel : QRCode.CorrectLevel.H
+  });
+  // qrcode.clear(); // clear the code./
+  let encodedData = compressString(data)
+  setEncodedOffer(encodedData)
+  showOverlay()
+  toastAction("code is generated")
+  qrcode.makeCode(encodedData);
+  offerGeneratedValue = true
+}
+
+const setEncodedOffer = (offer) =>{
+  getElement('#encodedOffer').value = offer
+}
+const showOverlay = (delay=10) =>{
+  let qrcode = getElement('#qrcode')
+  qrcode.style.display = 'block'
+  let reader = getElement('#reader')
+  reader.style.display = 'none'
+
+  getElement('#offerHeading').innerHTML = 'Please tell other player to scan the offer.';
+  let overlay = getElement('#overlay')
+  overlay.style.display = 'flex';
+  setTimeout(() => {
+    overlay.style.opacity = 1;
+  }, delay); // Small delay for the animation to trigger
+}
+
+const closeOverlay = () =>{
+  let overlay = getElement('#overlay')
+  overlay.style.display = 'none';
+  setTimeout(() => {
+    overlay.style.opacity = 1;
+  }, 10); // Small delay for the animation to trigger
+}
+
+function compressString(input) {
+  const compressed = new TextEncoder().encode(input);
+  const base64String = btoa(String.fromCharCode(...compressed));
+  return base64String;
+}
+
+function decompressString(input) {
+  const decoded = atob(input);
+  const decompressed = new TextDecoder().decode(Uint8Array.from(decoded, c => c.charCodeAt(0)));
+  return decompressed;
+}
+
+const copyOffer = () => {
+  // Select the input field
+  const textToCopy = getElement('#encodedOffer')
+  textToCopy.select();
+  textToCopy.setSelectionRange(0, 99999); // For mobile devices
+
+  // Copy the text inside the input
+  navigator.clipboard.writeText(textToCopy.value)
+    .then(() => {
+      toastAction('Offer copied...')
+    })
+    .catch(err => {
+      console.error("Failed to copy text: ", err);
+    });
+}
+
+const scanAnswer = () =>{
+
+  let qrcode = getElement('#qrcode')
+  qrcode.style.display = 'none'
+  let reader = getElement('#reader')
+  reader.style.display = 'block'
 
 
+  
+}
+
+function domReady(fn) {
+  if (
+      document.readyState === "complete" ||
+      document.readyState === "interactive"
+  ) {
+      setTimeout(fn, 1000);
+  } else {
+      document.addEventListener("DOMContentLoaded", fn);
+  }
+}
+
+domReady(function () {
+  
+  // If found you qr code
+  function onScanSuccess(decodeText, decodeResult) {
+      return alert("You Qr is : " + decodeText, decodeResult);
+  }
+
+  let htmlscanner = new Html5QrcodeScanner(
+      "my-qr-reader",
+      { fps: 10, qrbos: 250 }
+  );
+  htmlscanner.render(onScanSuccess);
+});
+
+
+
+const generateAnswer = () =>{
+
+}
+
+
+
+//----------------------------------------------------------end connection shit -----------------------------------------------------
+
+// =========================================game shit============================================================
 const node = Array.from({ length: 25 }, (_, i) => ({ number:-1, clas:"", bolcked:false}));
 
 const generateRandomArray = () => {
@@ -77,9 +248,6 @@ const generateRandomArray = () => {
   return array;
 }
 
-const getElement = (clas) => {
-  return document.querySelector(clas)
-}
 
 let isUserConnected = true;
 let areYouInTheGame = true;
@@ -260,6 +428,10 @@ const mainAlgorithm = () => {
   }
   
 }
+
+//--------------------------------------------------end game shit---------------------------------------------------
+
+
 
 window.onload = function() {
   resetBoard()
