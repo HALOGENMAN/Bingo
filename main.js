@@ -1,3 +1,5 @@
+"use strict";
+
 document.addEventListener("DOMContentLoaded", function () {
   const popoverTrigger = document.getElementById('myPopover');
   new bootstrap.Popover(popoverTrigger);
@@ -112,13 +114,15 @@ const configuration = {
   ]
 };
 
+
+
 let offerGeneratedValue = false;
 
 const peerConnection = new RTCPeerConnection(configuration);
 let sendChannel = {}
 function generateOffer(){
   if(offerGeneratedValue){
-    showOverlay()
+    showOverlay('overlay')
     return
   }
   peerConnection.onicecandidate = e =>  {
@@ -132,6 +136,8 @@ function generateOffer(){
   peerConnection.createOffer().then(o => peerConnection.setLocalDescription(o) )
 }
 
+
+
 const generateQr = (data) =>{
   document.getElementById("qrcode").innerHTML = ""
   var qrcode = new QRCode(document.getElementById("qrcode"), {
@@ -140,12 +146,12 @@ const generateQr = (data) =>{
     height: 350,
     colorDark : "#000000",
     colorLight : "#ffffff",
-    correctLevel : QRCode.CorrectLevel.H
+    correctLevel : QRCode.CorrectLevel.L
   });
   // qrcode.clear(); // clear the code./
   // let encodedData = compressString(data)
   setEncodedOffer(data)
-  showOverlay()
+  showOverlay('overlay')
   qrcode.makeCode(data);
   offerGeneratedValue = true
 }
@@ -153,17 +159,21 @@ const generateQr = (data) =>{
 const setEncodedOffer = (offer) =>{
   getElement('#encodedOffer').value = offer
 }
-const showOverlay = (delay=10) =>{
-  shoeOfferQr()
-  let overlay = getElement('#overlay')
+const showOverlay = (overlayId,delay=10) =>{
+  if(overlayId=='overlay'){
+    shoeOfferQr()
+  }else{
+    OfferScanar()
+  }
+  let overlay = getElement(`#${overlayId}`)
   overlay.style.display = 'flex';
   setTimeout(() => {
     overlay.style.opacity = 1;
   }, delay); // Small delay for the animation to trigger
 }
 
-const closeOverlay = () =>{
-  let overlay = getElement('#overlay')
+const closeOverlay = (overlayId) =>{
+  let overlay = getElement(`#${overlayId}`)
   overlay.style.display = 'none';
   setTimeout(() => {
     overlay.style.opacity = 1;
@@ -186,6 +196,23 @@ const copyOffer = () => {
     });
 }
 
+const getScannedData = (readerId,type) =>{
+  function onScanSuccess(decodedText, decodedResult) {
+    // Handle on success condition with the decoded text or result.
+    alert(`Scan result: ${decodedText}`, decodedResult);
+    // ...
+    html5QrcodeScanner.clear();
+    // ^ this will stop the scanner (video feed) and clear the scan area.
+  }
+  function onScanError(errorMessage) {
+    // handle on error condition, with error message
+    console.log(errorMessage)
+  }
+  var html5QrcodeScanner = new Html5QrcodeScanner(
+    readerId, { fps: 10, qrbox: 350 });
+  html5QrcodeScanner.render(onScanSuccess,onScanError);
+} 
+
 const scanAnswer = () =>{
   getElement('#offerHeading').innerHTML = 'Please Scan the Answer..';
   let qrcode = getElement('#qrcode')
@@ -195,7 +222,20 @@ const scanAnswer = () =>{
   getElement('#offerId').style.display = 'none'
   getElement('#scanAnswerButton').style.display = 'none'
   getElement('#shoeOfferQrButton').style.display = ''
-  
+  getElement('#answerIdBlock').style.display = ''
+  getScannedData('readerAnswerr','answer')
+}
+
+const gerAnswer = () =>{
+  let answerId = getElement('#ancerId');
+  console.log(answerId.value)
+  let answer = answerId.value;
+  answerId.value = "";
+
+}
+
+function scanOffer(){
+  showOverlay('answer')
 }
 
 const shoeOfferQr = () =>{
@@ -208,36 +248,52 @@ const shoeOfferQr = () =>{
   getElement('#offerId').style.display = 'block'
   getElement('#scanAnswerButton').style.display = ''
   getElement('#shoeOfferQrButton').style.display = 'none'
+  getElement('#answerIdBlock').style.display = 'none'
+
+}
+
+const OfferScanar = () =>{
+  getElement('#offerHeading').innerHTML = 'Please Scan The Offer';
+  let qrcode = getElement('#qrcodeAnswer')
+  qrcode.style.display = 'none'
+  let reader = getElement('#readerAnswer')
+  reader.style.display = 'block'
+  getScannedData('readerOfferr','offer')
+
+  // getElement('#offerId').style.display = 'block'
+  // getElement('#scanAnswerButton').style.display = ''
+  // getElement('#shoeOfferQrButton').style.display = 'none'
+  // getElement('#answerIdBlock').style.display = 'none'
 
 }
 
 
-scanAnswerButton
+// scanAnswerButton
 
-function domReady(fn) {
-  if (
-      document.readyState === "complete" ||
-      document.readyState === "interactive"
-  ) {
-      setTimeout(fn, 1000);
-  } else {
-      document.addEventListener("DOMContentLoaded", fn);
-  }
-}
+// function domReady(fn) {
+//   if (
+//       document.readyState === "complete" ||
+//       document.readyState === "interactive"
+//   ) {
+//       setTimeout(fn, 1000);
+//   } else {
+//       document.addEventListener("DOMContentLoaded", fn);
+//   }
+// }
 
-domReady(function () {
+// domReady(function () {
   
-  // If found you qr code
-  function onScanSuccess(decodeText, decodeResult) {
-      return alert("You Qr is : " + decodeText, decodeResult);
-  }
+//   // If found you qr code
+//   function onScanSuccess(decodeText, decodeResult) {
+//       return alert("You Qr is : " + decodeText, decodeResult);
+//   }
 
-  let htmlscanner = new Html5QrcodeScanner(
-      "my-qr-reader",
-      { fps: 10, qrbos: 250 }
-  );
-  htmlscanner.render(onScanSuccess);
-});
+//   let htmlscanner = new Html5QrcodeScanner(
+//       "my-qr-reader",
+//       { fps: 10, qrbos: 250 }
+//   );
+//   htmlscanner.render(onScanSuccess);
+// });
 
 
 

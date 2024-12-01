@@ -41,7 +41,7 @@
         <div class="col">
           <div class="input-group input-group-sm  mb-2">
             <input type="text" class="form-control" placeholder="Please enter connection Id..." aria-label="Recipient's username" aria-describedby="button-addon2">
-            <button class="btn btn-warning" type="button" id="button-addon2">Connect</button>
+            <button class="btn btn-warning" type="button" id="button-addon2" onclick="scanOffer()" >Scan Offer</button>
           </div>
         </div>
         
@@ -58,7 +58,7 @@
         <div class="col">
           <div class="input-group input-group-sm  mb-2">
             <input type="text" class="form-control" placeholder="Generate connection Id..." aria-label="Recipient's username" aria-describedby="button-addon2" disabled>
-            <button class="btn btn-warning" type="button" id="button-addon2" onclick="generateOffer()">Generate</button>
+            <button class="btn btn-warning" type="button" id="button-addon2" onclick="generateOffer()">Generate Offer</button>
           </div>
         </div>
         
@@ -159,10 +159,11 @@
       
     </div>
   </div>
+  <!-- offer overlay -->
   <div class="overlay" id="overlay">
     <div id="offer" class="offer">
       <div class="scanAnswer"> 
-        <span class="circle" style="background-color: white;" onclick="closeOverlay()">
+        <span class="circle" style="background-color: white;" onclick="closeOverlay('overlay')">
           <i class="fa-solid fa-x"></i>
         </span>
       </div>
@@ -175,10 +176,55 @@
           <div id="reader" style="display: none;">
             <!-- <div class="scanner"> -->
               <!-- <div class="section"> -->
-                  <div id="my-qr-reader">
+                  <!-- <div id="my-qr-reader"> -->
+                    <div style="width: 500px" id="readerAnswerr"></div>
                   <!-- </div> -->
               <!-- </div> -->
+          <!-- </div> -->
           </div>
+
+        </div>
+      </div>
+      <div class="mt-3" id="offerId"> 
+        <div class="input-group mb-3">
+          <input type="text"  class="form-control" id="encodedOffer" aria-label="Recipient's username" aria-describedby="button-addon2" readonly>
+          <button class="btn btn-info" type="button" id="liveToastBtn" onclick="copyOffer()">Copy</button>
+        </div>
+      </div>
+      <div class="mt-3" id="answerIdBlock"> 
+        <div class="input-group mb-3">
+          <input type="text"  class="form-control" id="ancerId" aria-label="Recipient's username" aria-describedby="button-addon2">
+          <button class="btn btn-info" type="button" id="liveToastBtn" onclick="gerAnswer()">Accept</button>
+        </div>
+      </div>
+      <div class="scanAnswer mt-3" id="scanAnswerButton"> 
+          <button class="btn btn-warning" type="button" onclick="scanAnswer()"><b>Scan Answer</b></button>
+      </div>
+      <div class="scanAnswer mt-3" id="shoeOfferQrButton" style="display: none;"> 
+        <button class="btn btn-warning" type="button" onclick="shoeOfferQr()"><b>Offer QR</b></button>
+    </div>
+    </div>
+  </div>
+  <!-- answer overlay -->
+  <div class="overlay" id="answer">
+    <div id="offer" class="offer">
+      <div class="scanAnswer"> 
+        <span class="circle" style="background-color: white;" onclick="closeOverlay('answer')">
+          <i class="fa-solid fa-x"></i>
+        </span>
+      </div>
+      <div id="offerHeading" class="offerHeading mt-3"></div>
+      <div class="qrStyle mt-3">
+        <div class="qrBorder">
+          <div id="qrcodeAnswer"></div>
+          <div id="readerAnswer" style="display: none;">
+            <!-- <div class="scanner"> -->
+              <!-- <div class="section"> -->
+                  <!-- <div id="my-qr-reader"> -->
+                    <div style="width: 500px" id="readerOfferr"></div>
+                  <!-- </div> -->
+              <!-- </div> -->
+          <!-- </div> -->
           </div>
 
         </div>
@@ -197,7 +243,7 @@
     </div>
     </div>
   </div>
-   <!-- toast ------------------------>
+  <!-- toast ------------------------>
   <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 10000;">
     <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
       <div class="toast-header">
@@ -214,7 +260,8 @@
   
 
   <audio id="backgroundMusic" src="music/Damaui, Brian Michael Hinds & PALMU - Can We Talk About Us.mp3" loop allow="autoplay"></audio>
-  <script src="https://unpkg.com/html5-qrcode"></script>
+  <!-- <script src="https://unpkg.com/html5-qrcode"></script> -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
   <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
