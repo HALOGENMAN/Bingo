@@ -109,8 +109,7 @@ const toggleMusic = () =>{
 
 const configuration = {
   iceServers: [
-    { urls: "stun:stun.l.google.com:19302" },
-    { urls: "stun:stun1.l.google.com:19302" }
+    { urls: 'stun:stun.l.google.com:19302' }
   ]
 };
 
@@ -137,7 +136,10 @@ function generateOffer(){
 }
 
 const connectWithRemote = (answer) =>{
-  peerConnection.setRemoteDescription (answer).then(a=>console.log("done"))
+  console.log(answer)
+  peerConnection.setRemoteDescription (answer).then(a=>console.log("done",a)).catch(error=>{
+    console.log(error)
+  })
 }
 
 
@@ -206,7 +208,7 @@ const copyOffer = (type='Offer') => {
 
 const connectUsingOfferToGenerateAnswer  = async (offer) =>{
 
-  const remoteConnection = new RTCPeerConnection(configuration)
+  const remoteConnection = new RTCPeerConnection()
   remoteConnection.onicecandidate = e =>  {
   console.log(" NEW ice candidnat!! on localconnection reprinting SDP " )
   console.log(JSON.stringify(remoteConnection.localDescription) )
@@ -296,12 +298,10 @@ const scanAnswer = () =>{
 
 const gerAnswer = () =>{
   let answerId = getElement('#ancerId');
-  console.log(answerId.value)
   let answer = answerId.value;
   if(answer=='') return;
   answerId.value = "";
   connectWithRemote(JSON.parse(answer))
-
 }
 
 const gerOffer = () =>{
