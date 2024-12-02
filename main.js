@@ -193,6 +193,7 @@ const copyOffer = (type='Offer') => {
   // Select the input field
 
   const textToCopy = type==='Offer'?getElement('#encodedAnswer'):getElement('#encodedOfferAnswer')
+  copyButtonClicked()
   textToCopy.select();
   textToCopy.setSelectionRange(0, 99999); // For mobile devices
 
@@ -204,6 +205,17 @@ const copyOffer = (type='Offer') => {
     .catch(err => {
       console.error("Failed to copy text: ", err);
     });
+}
+
+const copyButtonClicked = () =>{
+  let id = getElement('.copyBtn')
+  let id2 = getElement('.copyBtn-1')
+  id.innerHTML = `<i class="fa-solid fa-check"></i>`
+  id2.innerHTML = `<i class="fa-solid fa-check"></i>`
+  setTimeout(()=>{
+    id.innerHTML = `<i class="fa-solid fa-copy"></i>`
+    id2.innerHTML = `<i class="fa-solid fa-copy"></i>`
+  },500)
 }
 
 const connectUsingOfferToGenerateAnswer  = async (offer) =>{
